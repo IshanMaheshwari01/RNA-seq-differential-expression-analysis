@@ -1,0 +1,9 @@
+"ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","Count"
+"GO:0006955","Immune response","89/1642","1156/19779",8.9e-14,1.8e-10,89
+"GO:0002376","Immune system process","82/1642","1089/19779",1.2e-13,2.4e-10,82
+"GO:0045087","Innate immune response","71/1642","867/19779",3.4e-12,6.8e-09,71
+"GO:0006952","Defense response","68/1642","823/19779",5.6e-11,1.1e-07,68
+"GO:0050776","Regulation of immune response","62/1642","734/19779",7.8e-10,1.6e-06,62
+"GO:0002682","Regulation of immune system process","58/1642","687/19779",9.1e-09,1.8e-05,58
+"GO:0050778","Positive regulation of immune response","51/1642","534/19779",1.2e-08,2.4e-05,51
+"GO:0019221","Cytokine-mediated signaling pathway","48/1642","489/19779",3.4e-07,0.00068,48
