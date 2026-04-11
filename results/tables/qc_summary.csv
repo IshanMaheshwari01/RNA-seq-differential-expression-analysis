@@ -1,0 +1,13 @@
+"Sample","Condition","Batch","Total_Counts","Genes_Detected","Percent_Genes_Detected"
+"Tumor_1","Tumor","A",2586609,17986,89.9
+"Tumor_2","Tumor","B",2603971,18052,90.3
+"Tumor_3","Tumor","A",2631627,17970,89.8
+"Tumor_4","Tumor","B",2607632,18045,90.2
+"Tumor_5","Tumor","A",2616763,18040,90.2
+"Tumor_6","Tumor","B",2604692,18036,90.2
+"Normal_1","Normal","A",1969311,18491,92.5
+"Normal_2","Normal","B",1981946,18515,92.6
+"Normal_3","Normal","A",1987208,18481,92.4
+"Normal_4","Normal","B",1977322,18592,93
+"Normal_5","Normal","A",1991705,18557,92.8
+"Normal_6","Normal","B",1983949,18548,92.7
