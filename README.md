@@ -63,7 +63,7 @@ RNA-seq-differential-expression-analysis/
 
 ---
 
-##️ Technologies & Methods
+## Technologies & Methods
 
 ### **Core Technologies**
 - **R 4.3+** - Statistical computing
@@ -148,14 +148,13 @@ GO Enrichment Results:
 
 Differential Expression Summary
 
-Metric - Value
-Total genes analyzed - 19,779
-Significant DE genes - 3,296 (16.7%)
-Upregulated in tumor - 1,654
-Downregulated in tumor - 1,642
-Max fold change (up) - 28.1x
-Max fold change (down) - 0.04x (27x decrease)
-Min adjusted p-value - 1.36e-14
+- Total genes analyzed - 19,779
+- Significant DE genes - 3,296 (16.7%)
+- Upregulated in tumor - 1,654
+- Downregulated in tumor - 1,642
+- Max fold change (up) - 28.1x
+- Max fold change (down) - 0.04x (27x decrease)
+- Min adjusted p-value - 1.36e-14
 
 Top Enriched Pathways
 
