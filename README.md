@@ -12,7 +12,7 @@
 
 This project implements a complete **end-to-end RNA-seq differential expression analysis pipeline** comparing tumor tissue versus normal tissue. The analysis identifies differentially expressed genes, performs quality control, and reveals enriched biological pathways characteristic of cancer.
 
-### Key Objectives
+### Objectives
 
 - Identify genes differentially expressed between tumor and normal tissue
 - Perform comprehensive quality control on RNA-seq data
@@ -26,7 +26,7 @@ This project implements a complete **end-to-end RNA-seq differential expression 
 
 **Research Question:** Which genes and pathways are dysregulated in tumor tissue compared to normal tissue?
 
-**Key Findings:**
+**Findings:**
 - **3,296 differentially expressed genes** identified (16.7% of transcriptome)
 - **1,654 genes upregulated** in tumor (proliferation, cell cycle)
 - **1,642 genes downregulated** in tumor (immune response, defense)
@@ -63,7 +63,7 @@ RNA-seq-differential-expression-analysis/
 
 ---
 
-## 🛠️ Technologies & Methods
+##️ Technologies & Methods
 
 ### **Core Technologies**
 - **R 4.3+** - Statistical computing
@@ -71,7 +71,7 @@ RNA-seq-differential-expression-analysis/
 - **DESeq2** - Differential expression analysis
 - **clusterProfiler** - Pathway enrichment
 
-### **Key R Packages**
+### **R Packages**
 ```r
 # Differential Expression
 library(DESeq2)           # DE analysis (Love et al., 2014)
@@ -89,15 +89,18 @@ library(org.Hs.eg.db)     # Human gene annotations
 # Data Manipulation
 library(tidyverse)        # Data wrangling
 
-Statistical Methods
+```
+
+## Statistical Methods
 - Normalization: DESeq2 median-of-ratios
 - Variance stabilization: VST transformation
 - Batch correction: Linear model accounting for batch effects
 - Multiple testing: Benjamini-Hochberg FDR correction
 - Significance thresholds: Adjusted p-value < 0.05, |log2FC| ≥ 1
 
-Analysis Workflow:
+## Analysis Workflow
 
+```r
 1. Data Preparation
 
 source("scripts/01_data_preparation.R")
@@ -139,7 +142,9 @@ GO Enrichment Results:
 - Downregulated: Immune response, defense mechanisms
 - 16 significantly enriched pathways (p < 0.05)
 
-Key Results:
+```
+
+## Results
 
 Differential Expression Summary
 
@@ -164,8 +169,9 @@ Downregulated (Tumor < Normal):
 - Immune system process (82 genes, p = 2.4e-10)
 - Innate immune response (71 genes, p = 6.8e-09)
 
-Visualizations:
+## Visualizations:
 
+```r
 Quality Control
 <p align="center"> <img src="results/figures/05_pca_plot.png" width="45%" /> <img src="results/figures/04_sample_correlation.png" width="45%" /> </p>
 Left: PCA showing clear separation of tumor vs normal. Right: Sample correlation heatmap.
@@ -178,8 +184,11 @@ Pathway Enrichment
 <p align="center"> <img src="results/figures/16_GO_combined_comparison.png" width="90%" /> </p>
 Combined pathway enrichment showing upregulated proliferation pathways and downregulated immune pathways.
 
-How to Reproduce:
+```
 
+## How to Reproduce:
+
+```r
 - Prerequisites
 
 # R version 4.3 or higher
@@ -202,7 +211,9 @@ source("scripts/03_differential_expression.R")
 # Step 4: Pathway enrichment
 source("scripts/04_pathway_enrichment.R")
 
-Output Files:
+```
+
+## Output Files:
 
 Figures (16 total)
 - QC plots: Library sizes, gene detection, PCA, correlation
@@ -219,7 +230,7 @@ Tables (9 total)
 
 Additional QC and summary tables
 
-Skills Demonstrated:
+## Skills Demonstrated:
 
 Bioinformatics
 - RNA-seq data analysis
@@ -250,7 +261,7 @@ Domain Knowledge
 - Gene regulation
 - Biological pathway analysis
 
-References:
+## References:
 
 Methods & Packages
 - Love, M.I., Huber, W., Anders, S. (2014). Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15:550.
@@ -260,18 +271,16 @@ Methods & Packages
 Biological Context
 - Hanahan, D., Weinberg, R.A. (2011). Hallmarks of cancer: the next generation. Cell, 144(5):646-674.
 
-Author:
+## Author:
 Ishan Maheshwari
 - MSc in Genomics Data Science | University of Galway
 - LinkedIn: www.linkedin.com/in/ishanmaheshwari2001
 - Email: ishanmaheshwari02@gmail.com
 
-License:
+## License:
 This project is licensed under the MIT License.
 
-Acknowledgements:
+## Acknowledgements:
 - Bioconductor community for excellent bioinformatics tools
 - DESeq2 developers for robust statistical methods
 - R community for comprehensive data science ecosystem
-
-<p align="center"> <i>⭐ If you found this project helpful, please consider giving it a star!</i> </p><p align="center"> <sub>Built with ❤️ using R, Bioconductor, and open-source tools</sub> </p> ```
