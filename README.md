@@ -168,22 +168,45 @@ Downregulated (Tumor < Normal):
 - Immune system process (82 genes, p = 2.4e-10)
 - Innate immune response (71 genes, p = 6.8e-09)
 
-## Visualizations:
+## Visualizations
 
-```r
-Quality Control
-<p align="center"> <img src="results/figures/05_pca_plot.png" width="45%" /> <img src="results/figures/04_sample_correlation.png" width="45%" /> </p>
-Left: PCA showing clear separation of tumor vs normal. Right: Sample correlation heatmap.
+### Quality Control
 
-Differential Expression
-<p align="center"> <img src="results/figures/07_volcano_plot.png" width="45%" /> <img src="results/figures/09_heatmap_top_genes.png" width="45%" /> </p>
-Left: Volcano plot highlighting 3,296 DE genes. Right: Heatmap of top 50 DE genes.
+**PCA Analysis**
 
-Pathway Enrichment
-<p align="center"> <img src="results/figures/16_GO_combined_comparison.png" width="90%" /> </p>
-Combined pathway enrichment showing upregulated proliferation pathways and downregulated immune pathways.
+![PCA Plot](results/figures/05_pca_plot.png)
 
-```
+*PCA showing clear separation between tumor (red) and normal (blue) samples. PC1 captures 24.2% of variance.*
+
+**Sample Correlation**
+
+![Correlation Heatmap](results/figures/04_sample_correlation.png)
+
+*Sample-to-sample correlation heatmap showing samples cluster by condition.*
+
+---
+
+### Differential Expression
+
+**Volcano Plot**
+
+![Volcano Plot](results/figures/07_volcano_plot.png)
+
+*Volcano plot highlighting 3,296 differentially expressed genes. Red = upregulated, Blue = downregulated.*
+
+**Heatmap of Top DE Genes**
+
+![Heatmap](results/figures/09_heatmap_top_genes.png)
+
+*Heatmap of top 50 DE genes showing clear separation between tumor and normal samples.*
+
+---
+
+### Pathway Enrichment
+
+![GO Enrichment](results/figures/16_GO_combined_comparison.png)
+
+*GO enrichment analysis showing upregulated proliferation pathways (red) and downregulated immune pathways (blue).*
 
 ## How to Reproduce:
 
