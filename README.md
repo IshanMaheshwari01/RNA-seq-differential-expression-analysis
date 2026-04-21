@@ -41,14 +41,23 @@ This project implements a complete **end-to-end RNA-seq differential expression 
 
 ## Project Structure
 
+```r
 RNA-seq-differential-expression-analysis/
 │
 ├── README.md # Project documentation
 ├── environment.R # Package installation script
+├── analysis_report.html # Interactive HTML report
+│
+├── app/
+│ └── app.R # Shiny dashboard application
 │
 ├── data/
 │ ├── raw/ # Original count data
+│ │ ├── count_matrix.rds
+│ │ └── sample_metadata.rds
 │ └── processed/ # Filtered & normalized data
+│ ├── counts_filtered.rds
+│ └── vsd_matrix.rds
 │
 ├── scripts/
 │ ├── 01_data_preparation.R # Data simulation & setup
@@ -58,9 +67,33 @@ RNA-seq-differential-expression-analysis/
 │
 └── results/
 ├── figures/ # 16 publication-quality plots
+│ ├── 01_library_sizes.png
+│ ├── 02_gene_detection.png
+│ ├── 03_count_distribution.png
+│ ├── 04_sample_correlation.png
+│ ├── 05_pca_plot.png
+│ ├── 06_sample_distances.png
+│ ├── 07_volcano_plot.png
+│ ├── 08_MA_plot.png
+│ ├── 09_heatmap_top_genes.png
+│ ├── 10_fold_change_distribution.png
+│ ├── 11_pvalue_distribution.png
+│ ├── 12_GO_upregulated_barplot.png
+│ ├── 13_GO_upregulated_dotplot.png
+│ ├── 14_GO_downregulated_barplot.png
+│ ├── 15_GO_downregulated_dotplot.png
+│ └── 16_GO_combined_comparison.png
+│
 └── tables/ # 9 result tables (CSV)
-
-
+├── qc_summary.csv
+├── DE_results_full.csv
+├── DE_results_significant.csv
+├── DE_results_top100.csv
+├── DE_genes_upregulated.csv
+├── DE_genes_downregulated.csv
+├── GO_enrichment_upregulated.csv
+└── GO_enrichment_downregulated.csv
+```
 ---
 
 ## Technologies & Methods
@@ -192,7 +225,7 @@ Downregulated (Tumor < Normal):
 
 ![Volcano Plot](results/figures/07_volcano_plot.png)
 
-*Volcano plot highlighting 3,296 differentially expressed genes. Red = upregulated, Blue = downregulated.*
+*Volcano plot highlighting 3,296 differentially expressed genes. Red = upregulated, Green = downregulated.*
 
 **Heatmap of Top DE Genes**
 
