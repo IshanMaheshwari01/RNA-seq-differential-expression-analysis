@@ -230,14 +230,14 @@
     <div class="container">
         <!-- Header -->
         <header>
-            <h1>🧬 RNA-Seq Differential Expression Analysis</h1>
+            <h1>RNA-Seq Differential Expression Analysis</h1>
             <p>Tumor vs Normal Tissue Comparison</p>
             <p style="font-size: 0.9em; margin-top: 15px;">Ishan Maheshwari | MSc Genomics Data Science, University of Galway</p>
         </header>
         
         <!-- Table of Contents -->
         <div class="toc">
-            <h2>📋 Contents</h2>
+            <h2>Contents</h2>
             <ul>
                 <li><a href="#executive">Executive Summary</a></li>
                 <li><a href="#dataset">Dataset Overview</a></li>
@@ -254,12 +254,12 @@
             <h2>Executive Summary</h2>
             
             <div class="summary-box">
-                <h3>🔬 Study Overview</h3>
+                <h3>Study Overview</h3>
                 <p>This comprehensive RNA-seq analysis compares <strong>tumor tissue versus normal tissue</strong>, identifying <strong>3,296 differentially expressed genes</strong> and revealing key biological pathways dysregulated in cancer.</p>
             </div>
             
             <div class="key-finding">
-                <h4>📊 Key Findings</h4>
+                <h4>Findings</h4>
                 <ul>
                     <li><strong>3,296 genes</strong> significantly differentially expressed (16.7% of transcriptome)</li>
                     <li><strong>1,654 genes upregulated</strong> in tumor → proliferation pathways</li>
@@ -270,15 +270,15 @@
             </div>
             
             <div class="upregulated-box">
-                <h4>🔺 Upregulated Pathways</h4>
+                <h4>Upregulated Pathways</h4>
                 <p><strong>Cell cycle, DNA replication, mitosis</strong></p>
-                <p>→ Indicates uncontrolled cell proliferation (cancer hallmark) ✅</p>
+                <p>→ Indicates uncontrolled cell proliferation (cancer hallmark) </p>
             </div>
             
             <div class="downregulated-box">
-                <h4>🔻 Downregulated Pathways</h4>
+                <h4>Downregulated Pathways</h4>
                 <p><strong>Immune response, defense mechanisms</strong></p>
-                <p>→ Indicates immune evasion (cancer hallmark) ✅</p>
+                <p>→ Indicates immune evasion (cancer hallmark) </p>
             </div>
         </section>
         
@@ -289,22 +289,22 @@
             <h3>Dataset Characteristics</h3>
             <div class="metrics">
                 <div class="metric-card">
-                    <h4>🧬 Genes</h4>
+                    <h4>Genes</h4>
                     <div class="number">20,000</div>
                     <div class="label">Total genes analyzed</div>
                 </div>
                 <div class="metric-card">
-                    <h4>🔬 Samples</h4>
+                    <h4>Samples</h4>
                     <div class="number">12</div>
                     <div class="label">6 tumor + 6 normal</div>
                 </div>
                 <div class="metric-card">
-                    <h4>📊 Read Depth</h4>
+                    <h4>Read Depth</h4>
                     <div class="number">2.3M</div>
                     <div class="label">Reads per sample</div>
                 </div>
                 <div class="metric-card">
-                    <h4>📈 Detection</h4>
+                    <h4>Detection</h4>
                     <div class="number">91.4%</div>
                     <div class="label">Gene detection rate</div>
                 </div>
@@ -337,7 +337,7 @@
                 <div class="metric-card">
                     <h4>Sample Status</h4>
                     <div class="number">12/12</div>
-                    <div class="label">Passed QC ✅</div>
+                    <div class="label">Passed QC </div>
                 </div>
             </div>
             
@@ -396,11 +396,11 @@
             <h3>Volcano Plot</h3>
             <div class="figure-section">
                 <img src="results/figures/07_volcano_plot.png" alt="Volcano Plot">
-                <p><strong>Color legend:</strong> 🔴 Upregulated (red) | 🔵 Downregulated (blue) | ⚫ Not significant (gray)</p>
+                <p><strong>Color legend:</strong> Upregulated (red) | Downregulated (green) | Not significant (gray)</p>
                 <p>The volcano plot shows clear separation of significantly DE genes, indicating strong biological signal.</p>
             </div>
             
-            <h3>Top 10 Upregulated Genes</h3>
+            <h3>Top 5 Upregulated Genes</h3>
             <table>
                 <thead>
                     <tr>
@@ -444,7 +444,7 @@
                 </tbody>
             </table>
             
-            <h3>Top 10 Downregulated Genes</h3>
+            <h3>Top 5 Downregulated Genes</h3>
             <table>
                 <thead>
                     <tr>
@@ -538,13 +538,13 @@
             </table>
             
             <div class="upregulated-box">
-                <h4>🔺 Biological Interpretation: Proliferation Signature</h4>
+                <h4>Biological Interpretation: Proliferation Signature</h4>
                 <ul>
                     <li><strong>Cell cycle activation:</strong> Tumor cells dividing uncontrollably</li>
                     <li><strong>DNA replication:</strong> Preparing for cell division</li>
                     <li><strong>Mitosis:</strong> Active cell division process</li>
                 </ul>
-                <p><strong>Cancer Hallmark:</strong> Sustained proliferative signaling ✅</p>
+                <p><strong>Cancer Hallmark:</strong> Sustained proliferative signaling </p>
             </div>
             
             <h3>Downregulated Pathways (Tumor < Normal)</h3>
@@ -586,13 +586,13 @@
             </table>
             
             <div class="downregulated-box">
-                <h4>🔻 Biological Interpretation: Immune Evasion</h4>
+                <h4>Biological Interpretation: Immune Evasion</h4>
                 <ul>
                     <li><strong>Immune response suppressed:</strong> Tumor evading immune system</li>
                     <li><strong>Defense mechanisms impaired:</strong> Reduced immune surveillance</li>
                     <li><strong>Cytokine signaling blocked:</strong> Cell communication disrupted</li>
                 </ul>
-                <p><strong>Cancer Hallmark:</strong> Avoiding immune destruction ✅</p>
+                <p><strong>Cancer Hallmark:</strong> Avoiding immune destruction </p>
             </div>
             
             <h3>Pathway Comparison</h3>
@@ -619,34 +619,34 @@
                     <tr>
                         <td>Sustaining proliferative signaling</td>
                         <td>Cell cycle pathways upregulated (95 genes)</td>
-                        <td>✅ Detected</td>
+                        <td>Detected</td>
                     </tr>
                     <tr>
                         <td>Evading growth suppressors</td>
                         <td>Unchecked cell division (78 genes)</td>
-                        <td>✅ Detected</td>
+                        <td>Detected</td>
                     </tr>
                     <tr>
                         <td>Resisting cell death</td>
                         <td>Proliferation continues unchecked</td>
-                        <td>✅ Detected</td>
+                        <td>Detected</td>
                     </tr>
                     <tr>
                         <td>Enabling replicative immortality</td>
                         <td>DNA replication genes activated (65 genes)</td>
-                        <td>✅ Detected</td>
+                        <td>Detected</td>
                     </tr>
                     <tr>
                         <td>Avoiding immune destruction</td>
                         <td>Immune response pathways downregulated (89 genes)</td>
-                        <td>✅ Detected</td>
+                        <td>Detected</td>
                     </tr>
                 </tbody>
             </table>
             
             <h3>Key Findings Summary</h3>
             <div class="key-finding">
-                <h4>🔬 Molecular Changes</h4>
+                <h4>Molecular Changes</h4>
                 <ul>
                     <li><strong>Proliferation activated:</strong> 95 genes in cell cycle pathway, up to 28-fold upregulation</li>
                     <li><strong>Immune system suppressed:</strong> 89 genes in immune response pathway, down to 0.04-fold (96% reduction)</li>
@@ -655,7 +655,7 @@
             </div>
             
             <div class="key-finding">
-                <h4>💊 Clinical Implications</h4>
+                <h4>Clinical Implications</h4>
                 <ul>
                     <li><strong>Therapeutic targets:</strong> Cell cycle inhibitors (CDK4/6 inhibitors)</li>
                     <li><strong>Immunotherapy potential:</strong> Restore immune function (checkpoint inhibitors)</li>
@@ -667,18 +667,16 @@
         <!-- Contact -->
         <section id="contact">
             <div class="contact-info">
-                <h2>🎓 About This Analysis</h2>
+                <h2>About This Analysis</h2>
                 <p><strong>Author:</strong> Ishan Maheshwari</p>
-                <p><strong>Affiliation:</strong> MSc Genomics Data Science, University of Galway, Ireland</p>
                 <hr style="border: none; border-top: 2px solid rgba(255,255,255,0.3); margin: 20px 0;">
                 <p>
-                    📧 <strong>Email:</strong> <a href="mailto:ishanmaheshwari02@gmail.com">ishanmaheshwari02@gmail.com</a><br>
-                    💼 <strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/ishanmaheshwari2001" target="_blank">View Profile</a><br>
-                    🐙 <strong>GitHub:</strong> <a href="https://github.com/IshanMaheshwari01/RNA-seq-differential-expression-analysis" target="_blank">View Repository</a>
+                    <strong>Email:</strong> <a href="mailto:ishanmaheshwari02@gmail.com">ishanmaheshwari02@gmail.com</a><br>
+                    <strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/ishanmaheshwari2001" target="_blank">View Profile</a><br>
+                    <strong>GitHub:</strong> <a href="https://github.com/IshanMaheshwari01/RNA-seq-differential-expression-analysis" target="_blank">View Repository</a>
                 </p>
                 <hr style="border: none; border-top: 2px solid rgba(255,255,255,0.3); margin: 20px 0;">
                 <p><strong>Methods:</strong> R 4.4 | Bioconductor 3.17 | DESeq2 | clusterProfiler | tidyverse</p>
-                <p style="margin-top: 15px; opacity: 0.9;"><em>Built with ❤️ using open-source bioinformatics tools</em></p>
             </div>
         </section>
     </div>
