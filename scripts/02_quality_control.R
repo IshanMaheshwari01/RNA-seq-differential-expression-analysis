@@ -9,30 +9,30 @@ library(RColorBrewer)
 library(ggpubr)
 library(gridExtra)
 
-cat("🔍 Starting Quality Control Analysis...\n\n")
+cat("Starting Quality Control Analysis...\n\n")
 
 # ============================================================================
 # 1. LOAD DATA
 # ============================================================================
 
-cat("📂 Loading data...\n")
+cat("Loading data...\n")
 
 counts <- readRDS("data/raw/count_matrix.rds")
 metadata <- readRDS("data/raw/sample_metadata.rds")
 
-cat(sprintf("   ✓ Count matrix: %d genes × %d samples\n", nrow(counts), ncol(counts)))
-cat(sprintf("   ✓ Metadata: %d samples × %d variables\n\n", nrow(metadata), ncol(metadata)))
+cat(sprintf("   Count matrix: %d genes × %d samples\n", nrow(counts), ncol(counts)))
+cat(sprintf("   Metadata: %d samples × %d variables\n\n", nrow(metadata), ncol(metadata)))
 
 # Verify samples match
 if (!all(colnames(counts) == rownames(metadata))) {
-  stop("❌ Sample names don't match between counts and metadata!")
+  stop("Sample names don't match between counts and metadata!")
 }
 
 # ============================================================================
 # 2. LIBRARY SIZE (Total Counts per Sample)
 # ============================================================================
 
-cat("📊 Analyzing library sizes...\n")
+cat("Analyzing library sizes...\n")
 
 # Calculate total counts per sample
 lib_sizes <- data.frame(
@@ -71,7 +71,7 @@ cat("   ✓ Saved: results/figures/01_library_sizes.png\n\n")
 # 3. GENE DETECTION (How many genes detected per sample?)
 # ============================================================================
 
-cat("🧬 Analyzing gene detection...\n")
+cat("Analyzing gene detection...\n")
 
 # Count genes with at least 1, 10, and 100 counts per sample
 gene_detection <- data.frame(
@@ -112,13 +112,13 @@ p2 <- ggplot(gene_det_long, aes(x = sample, y = count, fill = condition)) +
         strip.background = element_rect(fill = "grey90"))
 
 ggsave("results/figures/02_gene_detection.png", p2, width = 10, height = 10, dpi = 300)
-cat("   ✓ Saved: results/figures/02_gene_detection.png\n\n")
+cat("Saved: results/figures/02_gene_detection.png\n\n")
 
 # ============================================================================
 # 4. COUNT DISTRIBUTION
 # ============================================================================
 
-cat("📈 Analyzing count distributions...\n")
+cat("Analyzing count distributions...\n")
 
 # Filter genes with very low counts (keep genes with ≥10 counts in ≥3 samples)
 keep <- rowSums(counts >= 10) >= 3
@@ -153,13 +153,13 @@ p3 <- ggplot(log_counts_long, aes(x = sample, y = log2_count, fill = condition))
         legend.position = "top")
 
 ggsave("results/figures/03_count_distribution.png", p3, width = 12, height = 6, dpi = 300)
-cat("   ✓ Saved: results/figures/03_count_distribution.png\n\n")
+cat("Saved: results/figures/03_count_distribution.png\n\n")
 
 # ============================================================================
 # 5. SAMPLE CORRELATION HEATMAP (IMPROVED VERSION)
 # ============================================================================
 
-cat("🔥 Creating sample correlation heatmap...\n")
+cat("Creating sample correlation heatmap...\n")
 
 # Calculate pairwise correlation between samples
 sample_cor <- cor(log_counts, method = "pearson")
@@ -198,12 +198,12 @@ pheatmap(sample_cor,
          angle_col = 45)
 dev.off()
 
-cat("   ✓ Saved: results/figures/04_sample_correlation.png\n\n")
+cat("Saved: results/figures/04_sample_correlation.png\n\n")
 # ============================================================================
 # 6. PCA ANALYSIS
 # ============================================================================
 
-cat("🎯 Performing PCA analysis...\n")
+cat("Performing PCA analysis...\n")
 
 # Create DESeq2 object for variance stabilizing transformation
 dds <- DESeqDataSetFromMatrix(
@@ -250,13 +250,13 @@ p4 <- ggplot(pca_data, aes(x = PC1, y = PC2, color = condition, shape = batch)) 
         panel.grid.minor = element_blank())
 
 ggsave("results/figures/05_pca_plot.png", p4, width = 10, height = 7, dpi = 300)
-cat("   ✓ Saved: results/figures/05_pca_plot.png\n\n")
+cat("Saved: results/figures/05_pca_plot.png\n\n")
 
 # ============================================================================
 # 7. SAMPLE DISTANCE HEATMAP
 # ============================================================================
 
-cat("📏 Creating sample distance heatmap...\n")
+cat("Creating sample distance heatmap...\n")
 
 # Calculate Euclidean distances between samples
 sample_dists <- dist(t(vsd_mat))
@@ -276,13 +276,13 @@ pheatmap(sample_dist_matrix,
          border_color = NA)
 dev.off()
 
-cat("   ✓ Saved: results/figures/06_sample_distances.png\n\n")
+cat("Saved: results/figures/06_sample_distances.png\n\n")
 
 # ============================================================================
 # 8. SAVE PROCESSED DATA AND QC SUMMARY
 # ============================================================================
 
-cat("💾 Saving processed data...\n")
+cat("Saving processed data...\n")
 
 # Save filtered counts
 saveRDS(counts_filtered, "data/processed/counts_filtered.rds")
@@ -299,12 +299,12 @@ qc_summary <- data.frame(
 )
 
 write.csv(qc_summary, "results/tables/qc_summary.csv", row.names = FALSE)
-cat("   ✓ Saved: data/processed/counts_filtered.rds\n")
-cat("   ✓ Saved: data/processed/vsd_matrix.rds\n")
-cat("   ✓ Saved: results/tables/qc_summary.csv\n\n")
+cat("Saved: data/processed/counts_filtered.rds\n")
+cat("Saved: data/processed/vsd_matrix.rds\n")
+cat("Saved: results/tables/qc_summary.csv\n\n")
 
 # Display summary
-cat("📊 QC SUMMARY TABLE:\n")
+cat("QC SUMMARY TABLE:\n")
 cat("=" %R% 80, "\n")
 print(qc_summary)
 
@@ -312,10 +312,10 @@ print(qc_summary)
 # 9. FINAL QC ASSESSMENT
 # ============================================================================
 
-cat("\n\n✅ QUALITY CONTROL COMPLETE!\n")
+cat("\n\n QUALITY CONTROL COMPLETE!\n")
 cat("=" %R% 80, "\n\n")
 
-cat("📋 QC Assessment:\n\n")
+cat("QC Assessment:\n\n")
 
 # Check for outliers based on library size
 lib_size_median <- median(lib_sizes$total_counts)
@@ -323,19 +323,19 @@ lib_size_mad <- mad(lib_sizes$total_counts)
 outliers <- abs(lib_sizes$total_counts - lib_size_median) > 3 * lib_size_mad
 
 if (any(outliers)) {
-  cat("   ⚠️  Potential outliers detected (library size):\n")
+  cat("Potential outliers detected (library size):\n")
   cat(paste("      -", lib_sizes$sample[outliers], collapse = "\n"))
   cat("\n\n")
 } else {
-  cat("   ✓ No outliers detected based on library size\n")
+  cat("No outliers detected based on library size\n")
 }
 
 # Check correlation
 min_cor <- min(sample_cor[lower.tri(sample_cor)])
 if (min_cor < 0.8) {
-  cat(sprintf("   ⚠️  Low correlation detected: %.3f (should be >0.8)\n", min_cor))
+  cat(sprintf("Low correlation detected: %.3f (should be >0.8)\n", min_cor))
 } else {
-  cat(sprintf("   ✓ Good sample correlation (min: %.3f)\n", min_cor))
+  cat(sprintf("Good sample correlation (min: %.3f)\n", min_cor))
 }
 
 # Check PCA separation
@@ -345,14 +345,12 @@ pca_separation <- !((pc1_range_tumor[1] > pc1_range_normal[2]) ||
                       (pc1_range_normal[1] > pc1_range_tumor[2]))
 
 if (pca_separation) {
-  cat("   ✓ Good separation between conditions in PCA\n")
+  cat("Good separation between conditions in PCA\n")
 } else {
-  cat("   ⚠️  Conditions overlap in PCA - may affect DE analysis\n")
+  cat("Conditions overlap in PCA - may affect DE analysis\n")
 }
 
-cat("\n📁 Generated Files:\n")
+cat("\n Generated Files:\n")
 cat("   - 6 publication-quality figures\n")
 cat("   - 1 QC summary table\n")
 cat("   - 2 processed data files\n")
-
-cat("\n🚀 Next step: Differential expression analysis (Script 03)\n\n")
