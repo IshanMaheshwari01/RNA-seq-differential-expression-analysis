@@ -4,7 +4,7 @@
 
 library(tidyverse)
 
-cat("📊 Creating simulated RNA-seq dataset...\n\n")
+cat("Creating simulated RNA-seq dataset...\n\n")
 
 set.seed(123)  # For reproducibility
 
@@ -22,7 +22,7 @@ sample_names <- c(
 # Mix of real-looking gene IDs
 gene_names <- paste0("GENE_", sprintf("%05d", 1:n_genes))
 
-cat("🧬 Simulating count matrix...\n")
+cat("Simulating count matrix...\n")
 cat(sprintf("   Genes: %d\n", n_genes))
 cat(sprintf("   Samples: %d (%d tumor, %d normal)\n", n_samples, 6, 6))
 
@@ -40,7 +40,7 @@ base_expression <- rnbinom(n_genes, mu = 100, size = 2)
 # - 2,000 genes (10%): Upregulated in tumor
 # - 2,000 genes (10%): Downregulated in tumor
 
-cat("\n🎯 Creating differential expression patterns...\n")
+cat("\n Creating differential expression patterns...\n")
 cat("   - 80% genes: No change\n")
 cat("   - 10% genes: Upregulated in tumor\n")
 cat("   - 10% genes: Downregulated in tumor\n\n")
@@ -65,10 +65,10 @@ for (i in 1:n_genes) {
   }
 }
 
-cat("✅ Count matrix created\n\n")
+cat("Count matrix created\n\n")
 
 # Create sample metadata
-cat("📋 Creating sample metadata...\n")
+cat("Creating sample metadata...\n")
 
 metadata <- data.frame(
   sample_id = sample_names,
@@ -86,10 +86,10 @@ metadata$gender <- factor(c("M", "F", "M", "M", "F", "F",
 metadata$stage <- factor(c("III", "II", "IV", "II", "III", "II",
                            NA, NA, NA, NA, NA, NA))  # Stage only for tumors
 
-cat("✅ Metadata created\n\n")
+cat("Metadata created\n\n")
 
 # Display summary
-cat("📊 DATASET SUMMARY\n")
+cat("DATASET SUMMARY\n")
 cat("==================\n\n")
 cat("Count Matrix:\n")
 cat(sprintf("  Dimensions: %d genes × %d samples\n", nrow(counts), ncol(counts)))
@@ -104,7 +104,7 @@ cat("\n\nFirst 5 genes × 6 samples:\n")
 print(counts[1:5, 1:6])
 
 # Save data
-cat("\n💾 Saving data files...\n")
+cat("\n Saving data files...\n")
 
 # Make sure directories exist
 dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
@@ -118,11 +118,10 @@ write.csv(metadata, "data/raw/sample_metadata.csv", row.names = TRUE)
 saveRDS(counts, "data/raw/count_matrix.rds")
 saveRDS(metadata, "data/raw/sample_metadata.rds")
 
-cat("\n✅ FILES SAVED:\n")
-cat("   📁 data/raw/count_matrix.csv\n")
-cat("   📁 data/raw/sample_metadata.csv\n")
-cat("   📁 data/raw/count_matrix.rds\n")
-cat("   📁 data/raw/sample_metadata.rds\n")
+cat("\n FILES SAVED:\n")
+cat("   data/raw/count_matrix.csv\n")
+cat("   data/raw/sample_metadata.csv\n")
+cat("   data/raw/count_matrix.rds\n")
+cat("   data/raw/sample_metadata.rds\n")
 
-cat("\n🎉 Data preparation complete!\n")
-cat("📌 Next step: Quality control analysis\n\n")
+cat("\n Data preparation complete!\n")
