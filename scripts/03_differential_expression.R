@@ -13,6 +13,10 @@ library(cowplot)
 cat("DIFFERENTIAL EXPRESSION ANALYSIS WITH DESeq2\n")
 cat(paste(rep("=", 80), collapse=""), "\n\n")
 
+# Make sure output folders exist (robust on a fresh machine)
+dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
+dir.create("results/tables",  recursive = TRUE, showWarnings = FALSE)
+
 # ============================================================================
 # 1. LOAD DATA
 # ============================================================================
