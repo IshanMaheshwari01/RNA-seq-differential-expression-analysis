@@ -47,7 +47,7 @@ ui <- dashboardPage(
       # OVERVIEW
       tabItem(tabName = "overview",
               h2("RNA-Seq Differential Expression Analysis"),
-              p("Interactive explorer for tumor vs normal tissue comparison"),
+              p("Interactive explorer for a simulated tumour-vs-normal RNA-seq dataset (pipeline validation)"),
               
               fluidRow(
                 valueBox(format(nrow(de_results), big.mark = ","), "Total Genes", color = "purple", width = 3),
@@ -58,21 +58,20 @@ ui <- dashboardPage(
               
               fluidRow(
                 box(title = "Key Findings", status = "primary", solidHeader = TRUE, width = 6,
-                    h4("3,296 Differentially Expressed Genes"),
+                    h4(paste0(format(nrow(sig_genes), big.mark = ","), " differentially expressed genes")),
                     tags$ul(
-                      tags$li("Fold changes: 0.04x to 28.1x"),
-                      tags$li("Min p-value: 1.36×10⁻¹⁴"),
-                      tags$li("Up: Cell cycle, DNA replication"),
-                      tags$li("Down: Immune response, defense")
+                      tags$li("Thresholds: padj < 0.05 and |log2FC| >= 1"),
+                      tags$li("Up: cell cycle, DNA replication, cell division"),
+                      tags$li("Down: immune response, antigen presentation"),
+                      tags$li("Recovered the planted signature - pipeline validation")
                     )
                 ),
                 
-                box(title = "Cancer Hallmarks", status = "danger", solidHeader = TRUE, width = 6,
+                box(title = "Simulated Signature (recovered)", status = "danger", solidHeader = TRUE, width = 6,
+                    p("Simulated tumour-vs-normal data with a known signature planted in real genes; the pipeline recovers it from raw counts:"),
                     tags$ul(
-                      tags$li("Sustained proliferation"),
-                      tags$li("Immune evasion"),
-                      tags$li("Evading growth suppressors"),
-                      tags$li("Replicative immortality")
+                      tags$li("Proliferation / cell cycle - up (planted & recovered)"),
+                      tags$li("Immune response - down (planted & recovered)")
                     )
                 )
               )
