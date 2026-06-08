@@ -11,6 +11,10 @@ library(gridExtra)
 
 cat("Starting Quality Control Analysis...\n\n")
 
+# Make sure output folders exist (robust on a fresh machine)
+dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
+dir.create("results/tables",  recursive = TRUE, showWarnings = FALSE)
+
 # ============================================================================
 # 1. LOAD DATA
 # ============================================================================
@@ -305,7 +309,7 @@ cat("Saved: results/tables/qc_summary.csv\n\n")
 
 # Display summary
 cat("QC SUMMARY TABLE:\n")
-cat("=" %R% 80, "\n")
+cat(paste(rep("=", 80), collapse=""), "\n")
 print(qc_summary)
 
 # ============================================================================
@@ -313,7 +317,7 @@ print(qc_summary)
 # ============================================================================
 
 cat("\n\n QUALITY CONTROL COMPLETE!\n")
-cat("=" %R% 80, "\n\n")
+cat(paste(rep("=", 80), collapse=""), "\n\n")
 
 cat("QC Assessment:\n\n")
 
@@ -354,3 +358,4 @@ cat("\n Generated Files:\n")
 cat("   - 6 publication-quality figures\n")
 cat("   - 1 QC summary table\n")
 cat("   - 2 processed data files\n")
+
