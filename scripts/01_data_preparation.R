@@ -1,127 +1,142 @@
 # scripts/01_data_preparation.R
-# Create simulated RNA-seq count data for differential expression analysis
-# This simulates a realistic colorectal cancer vs normal tissue dataset
+# ---------------------------------------------------------------------------
+# Create a SIMULATED but biologically grounded RNA-seq dataset for a
+# tumour-vs-normal differential-expression demonstration.
+#
+# WHY THIS DESIGN:
+#   The point of this project is to show a correct, reproducible bulk RNA-seq
+#   pipeline (QC -> DESeq2 -> enrichment). To make every step honest, the data
+#   is simulated with a KNOWN GROUND TRUTH planted in REAL, annotated human
+#   genes:
+#       * genes annotated to proliferation / cell-cycle GO terms are made
+#         UP-regulated in tumour
+#       * genes annotated to immune-response GO terms are made DOWN-regulated
+#         in tumour
+#   Because the signal lives in real genes, the downstream GO enrichment
+#   (script 04) recovers "proliferation up / immune down" FOR REAL, computed
+#   from the data — nothing is hard-coded. This is exactly how a pipeline is
+#   validated against a known truth.
+# ---------------------------------------------------------------------------
 
 library(tidyverse)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 
-cat("Creating simulated RNA-seq dataset...\n\n")
+set.seed(123)  # reproducibility
 
-set.seed(123)  # For reproducibility
+cat("Creating biologically grounded simulated RNA-seq dataset...\n\n")
 
-# Parameters
-n_genes <- 20000      # Total number of genes
-n_samples <- 12       # Total samples (6 tumor, 6 normal)
+# ---------------------------------------------------------------------------
+# 1. Build the gene universe from REAL human gene symbols
+# ---------------------------------------------------------------------------
+all_symbols <- keys(org.Hs.eg.db, keytype = "SYMBOL")
+all_symbols <- unique(all_symbols)
 
-# Create sample names
-sample_names <- c(
-  paste0("Tumor_", 1:6),
-  paste0("Normal_", 1:6)
-)
+n_genes <- 20000
+universe <- sample(all_symbols, min(n_genes, length(all_symbols)))
 
-# Create gene names (using realistic gene symbols)
-# Mix of real-looking gene IDs
-gene_names <- paste0("GENE_", sprintf("%05d", 1:n_genes))
+# ---------------------------------------------------------------------------
+# 2. Pull REAL gene sets to plant the signal in
+#    (genes annotated to these GO biological-process terms)
+# ---------------------------------------------------------------------------
+genes_for_go <- function(go_id) {
+  s <- AnnotationDbi::select(org.Hs.eg.db, keys = go_id,
+                             keytype = "GOALL", columns = "SYMBOL")$SYMBOL
+  unique(na.omit(s))
+}
 
-cat("Simulating count matrix...\n")
-cat(sprintf("   Genes: %d\n", n_genes))
-cat(sprintf("   Samples: %d (%d tumor, %d normal)\n", n_samples, 6, 6))
+proliferation <- unique(c(
+  genes_for_go("GO:0007049"),  # cell cycle
+  genes_for_go("GO:0051301"),  # cell division
+  genes_for_go("GO:0006260")   # DNA replication
+))
+immune <- unique(c(
+  genes_for_go("GO:0006955"),  # immune response
+  genes_for_go("GO:0002376")   # immune system process
+))
 
-# Initialize count matrix
-counts <- matrix(0, nrow = n_genes, ncol = n_samples)
-rownames(counts) <- gene_names
-colnames(counts) <- sample_names
+# keep only genes that are in our universe, and make the two sets disjoint
+proliferation <- intersect(proliferation, universe)
+immune        <- setdiff(intersect(immune, universe), proliferation)
 
-# Simulate realistic gene expression levels
-# Base expression levels (most genes lowly expressed, few highly expressed)
-base_expression <- rnbinom(n_genes, mu = 100, size = 2)
+# plant a manageable, realistic number of DE genes
+n_up   <- min(1500, length(proliferation))
+n_down <- min(1500, length(immune))
+up_genes   <- sample(proliferation, n_up)
+down_genes <- sample(immune, n_down)
 
-# Gene categories:
-# - 16,000 genes (80%): No difference between conditions
-# - 2,000 genes (10%): Upregulated in tumor
-# - 2,000 genes (10%): Downregulated in tumor
+cat(sprintf("Universe: %d real genes\n", length(universe)))
+cat(sprintf("Planted UP (proliferation):   %d genes\n", n_up))
+cat(sprintf("Planted DOWN (immune):        %d genes\n", n_down))
+cat(sprintf("Null (no change):             %d genes\n\n",
+            length(universe) - n_up - n_down))
 
-cat("\n Creating differential expression patterns...\n")
-cat("   - 80% genes: No change\n")
-cat("   - 10% genes: Upregulated in tumor\n")
-cat("   - 10% genes: Downregulated in tumor\n\n")
+# ---------------------------------------------------------------------------
+# 3. Simulate the count matrix (negative binomial — correct model for counts)
+# ---------------------------------------------------------------------------
+n_samples <- 12
+sample_names <- c(paste0("Tumor_", 1:6), paste0("Normal_", 1:6))
 
-for (i in 1:n_genes) {
-  
-  if (i <= 16000) {
-    # No significant difference - same distribution for all samples
-    counts[i, ] <- rnbinom(n_samples, mu = base_expression[i], size = 2)
-    
-  } else if (i <= 18000) {
-    # Upregulated in tumor (2-8 fold change)
-    fold_change <- runif(1, 2, 8)
-    counts[i, 1:6] <- rnbinom(6, mu = base_expression[i] * fold_change, size = 2)
-    counts[i, 7:12] <- rnbinom(6, mu = base_expression[i], size = 2)
-    
+base_expression <- rnbinom(length(universe), mu = 100, size = 2)
+base_expression <- pmax(base_expression, 5)
+names(base_expression) <- universe
+
+counts <- matrix(0L, nrow = length(universe), ncol = n_samples,
+                 dimnames = list(universe, sample_names))
+
+up_set   <- up_genes
+down_set <- down_genes
+tumor_cols  <- 1:6
+normal_cols <- 7:12
+
+for (g in universe) {
+  mu <- base_expression[g]
+  if (g %in% up_set) {
+    fc <- runif(1, 3, 8)
+    counts[g, tumor_cols]  <- rnbinom(6, mu = mu * fc, size = 2)
+    counts[g, normal_cols] <- rnbinom(6, mu = mu,      size = 2)
+  } else if (g %in% down_set) {
+    fc <- runif(1, 3, 8)
+    counts[g, tumor_cols]  <- rnbinom(6, mu = mu / fc, size = 2)
+    counts[g, normal_cols] <- rnbinom(6, mu = mu,      size = 2)
   } else {
-    # Downregulated in tumor (2-8 fold change)
-    fold_change <- runif(1, 2, 8)
-    counts[i, 1:6] <- rnbinom(6, mu = base_expression[i] / fold_change, size = 2)
-    counts[i, 7:12] <- rnbinom(6, mu = base_expression[i], size = 2)
+    counts[g, ] <- rnbinom(n_samples, mu = mu, size = 2)
   }
 }
 
 cat("Count matrix created\n\n")
 
-# Create sample metadata
-cat("Creating sample metadata...\n")
-
+# ---------------------------------------------------------------------------
+# 4. Sample metadata
+# ---------------------------------------------------------------------------
 metadata <- data.frame(
-  sample_id = sample_names,
-  condition = factor(c(rep("Tumor", 6), rep("Normal", 6)), 
-                     levels = c("Normal", "Tumor")),  # Normal as reference
-  batch = factor(rep(c("A", "B", "A", "B", "A", "B"), 2)),
+  sample_id  = sample_names,
+  condition  = factor(c(rep("Tumor", 6), rep("Normal", 6)),
+                      levels = c("Normal", "Tumor")),   # Normal = reference
+  batch      = factor(rep(c("A", "B", "A", "B", "A", "B"), 2)),
   patient_id = factor(c(1:6, 1:6)),
-  row.names = sample_names
+  row.names  = sample_names
 )
+metadata$age    <- c(65, 58, 72, 55, 68, 61, 64, 59, 70, 56, 67, 62)
+metadata$gender <- factor(c("M","F","M","M","F","F","M","F","M","M","F","F"))
+metadata$stage  <- factor(c("III","II","IV","II","III","II", NA,NA,NA,NA,NA,NA))
 
-# Add some clinical/demographic variables
-metadata$age <- c(65, 58, 72, 55, 68, 61, 64, 59, 70, 56, 67, 62)
-metadata$gender <- factor(c("M", "F", "M", "M", "F", "F", 
-                            "M", "F", "M", "M", "F", "F"))
-metadata$stage <- factor(c("III", "II", "IV", "II", "III", "II",
-                           NA, NA, NA, NA, NA, NA))  # Stage only for tumors
-
-cat("Metadata created\n\n")
-
-# Display summary
-cat("DATASET SUMMARY\n")
-cat("==================\n\n")
-cat("Count Matrix:\n")
-cat(sprintf("  Dimensions: %d genes × %d samples\n", nrow(counts), ncol(counts)))
-cat(sprintf("  Total counts: %s\n", format(sum(counts), big.mark = ",")))
-cat(sprintf("  Mean counts per gene: %.0f\n", mean(rowSums(counts))))
-cat(sprintf("  Median counts per gene: %.0f\n", median(rowSums(counts))))
-
-cat("\nSample Metadata:\n")
-print(metadata)
-
-cat("\n\nFirst 5 genes × 6 samples:\n")
-print(counts[1:5, 1:6])
-
-# Save data
-cat("\n Saving data files...\n")
-
-# Make sure directories exist
+# ---------------------------------------------------------------------------
+# 5. Save (also save the ground-truth lists so the pipeline can be validated)
+# ---------------------------------------------------------------------------
 dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
 dir.create("data/processed", recursive = TRUE, showWarnings = FALSE)
 
-# Save as CSV
-write.csv(counts, "data/raw/count_matrix.csv", row.names = TRUE)
+write.csv(counts,   "data/raw/count_matrix.csv",   row.names = TRUE)
 write.csv(metadata, "data/raw/sample_metadata.csv", row.names = TRUE)
-
-# Also save as RDS for faster loading in R
-saveRDS(counts, "data/raw/count_matrix.rds")
+saveRDS(counts,   "data/raw/count_matrix.rds")
 saveRDS(metadata, "data/raw/sample_metadata.rds")
+saveRDS(list(up = up_genes, down = down_genes),
+        "data/raw/ground_truth_genes.rds")
 
-cat("\n FILES SAVED:\n")
-cat("   data/raw/count_matrix.csv\n")
-cat("   data/raw/sample_metadata.csv\n")
-cat("   data/raw/count_matrix.rds\n")
-cat("   data/raw/sample_metadata.rds\n")
+cat("DATASET SUMMARY\n==================\n")
+cat(sprintf("  Dimensions: %d genes x %d samples\n", nrow(counts), ncol(counts)))
+cat(sprintf("  Total counts: %s\n", format(sum(counts), big.mark = ",")))
+cat("\nFiles saved to data/raw/ (count_matrix, sample_metadata, ground_truth_genes)\n")
+cat("\nData preparation complete!\n")
 
-cat("\n Data preparation complete!\n")
