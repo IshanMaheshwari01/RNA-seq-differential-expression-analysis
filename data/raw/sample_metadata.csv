@@ -1,0 +1,13 @@
+"","sample_id","condition","batch","patient_id","age","gender","stage"
+"Tumor_1","Tumor_1","Tumor","A","1",65,"M","III"
+"Tumor_2","Tumor_2","Tumor","B","2",58,"F","II"
+"Tumor_3","Tumor_3","Tumor","A","3",72,"M","IV"
+"Tumor_4","Tumor_4","Tumor","B","4",55,"M","II"
+"Tumor_5","Tumor_5","Tumor","A","5",68,"F","III"
+"Tumor_6","Tumor_6","Tumor","B","6",61,"F","II"
+"Normal_1","Normal_1","Normal","A","1",64,"M",NA
+"Normal_2","Normal_2","Normal","B","2",59,"F",NA
+"Normal_3","Normal_3","Normal","A","3",70,"M",NA
+"Normal_4","Normal_4","Normal","B","4",56,"M",NA
+"Normal_5","Normal_5","Normal","A","5",67,"F",NA
+"Normal_6","Normal_6","Normal","B","6",62,"F",NA
