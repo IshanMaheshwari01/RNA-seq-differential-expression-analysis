@@ -1,341 +1,224 @@
-# RNA-Seq Differential Expression Analysis: Tumor vs Normal
+# TCGA-BRCA Tumor vs. Normal RNA-seq Differential Expression
 
-[![R](https://img.shields.io/badge/R-4.3+-276DC3?style=flat&logo=r&logoColor=white)](https://www.r-project.org/)
-[![Bioconductor](https://img.shields.io/badge/Bioconductor-3.17+-1881C2?style=flat)](https://bioconductor.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Differential expression and pathway enrichment analysis on real, publicly
+available TCGA-BRCA RNA-seq data, comparing matched tumor and normal breast
+tissue from the same patients. Every number in this README, from the sample
+counts to the enrichment p-values, comes from actually running the pipeline
+in `scripts/` end to end.
 
-> **A comprehensive RNA-seq analysis pipeline demonstrating differential gene expression analysis, quality control, and pathway enrichment in cancer research.**
+**Data**: TCGA-BRCA (breast invasive carcinoma) bulk RNA-seq gene counts,
+pulled from the [recount3](https://rna.recount.bio) project's AWS Open Data
+mirror, not simulated. Sample selection: 25 patients who each had both a
+primary tumor and a matched solid-tissue-normal sample sequenced (50 samples
+total), picked at random (seed 42) out of the 113 such patients available in
+TCGA-BRCA.
 
----
+## Why recount3 instead of the Xena hub file
 
-## Project Overview
+The task brief suggested pulling `TCGA-BRCA.htseq_counts.tsv.gz` straight
+from the UCSC Xena GDC hub S3 bucket
+(`gdc-hub.s3.us-east-1.amazonaws.com`). That bucket returned `403 Access
+Denied` from this environment, and the `gdc.xenahubs.net` redirector just
+302s to the same restricted bucket, so that path was a dead end. recount3
+was the fallback the brief itself suggested, and it worked on the first
+try – its AWS Open Data mirror
+(`recount-opendata.s3.amazonaws.com/recount3/release/...`) returned the
+files over plain HTTP with no auth. Exact files used:
 
-This project implements a complete **end-to-end RNA-seq differential expression analysis pipeline** comparing tumor tissue versus normal tissue. The analysis identifies differentially expressed genes, performs quality control, and reveals enriched biological pathways characteristic of cancer.
+- Gene counts: `https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/gene_sums/CA/BRCA/tcga.gene_sums.BRCA.G026.gz`
+- Sample metadata (TCGA barcodes, sample type, clinical fields): `https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/metadata/CA/BRCA/tcga.tcga.BRCA.MD.gz`
+- QC metadata (average mapped read length, used for the counts conversion below): `https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/metadata/CA/BRCA/tcga.recount_qc.BRCA.MD.gz`
 
-### Objectives
+recount3 itself sources TCGA sequence data from the NCI Genomic Data
+Commons, processed uniformly through the Monorail pipeline (STAR +
+featureCounts-style summarization), so this is the same underlying TCGA
+sequencing data GDC and Xena also serve, just processed and hosted
+differently – see the recount3 paper for the processing details ([Wilks et
+al. 2021, *Genome Biology*](https://pmc.ncbi.nlm.nih.gov/articles/PMC8628444/)).
 
-- Identify genes differentially expressed between tumor and normal tissue
-- Perform comprehensive quality control on RNA-seq data
-- Discover enriched biological pathways and processes
-- Create publication-quality visualizations
-- Demonstrate reproducible bioinformatics research
+One wrinkle worth flagging explicitly: recount3's `gene_sums` files are
+**base-pair coverage sums**, not read counts – this is documented in the
+recount3 Bioconductor manual and is easy to miss if you don't read past the
+column headers. I converted them to approximate integer read counts using
+the same formula the official R package's `compute_read_counts()` uses:
+`round(gene_sums / average_mapped_read_length)`, using the per-sample
+average mapped read length from the `recount_qc` table. This is done in
+`scripts/01_data_preparation.py` before anything touches pydeseq2. If you
+skip this step the library sizes come out in the billions instead of tens
+of millions, which was in fact how I caught the mistake the first time
+through.
 
----
+## The biological question
 
-## Biological Context
+Which genes are consistently up- or down-regulated in breast tumor tissue
+compared to the adjacent normal tissue from the *same patient*, and what
+biological processes do those genes belong to? Using matched pairs instead
+of pooling unrelated tumor and normal samples controls for a lot of
+inter-patient variation (age, genetic background, batch) that would
+otherwise be folded into the "tumor vs normal" signal.
 
-**Research Question:** Which genes and pathways are dysregulated in tumor tissue compared to normal tissue?
+## What I actually got (real numbers, this run)
 
-**Findings:**
-- **3,296 differentially expressed genes** identified (16.7% of transcriptome)
-- **1,654 genes upregulated** in tumor (proliferation, cell cycle)
-- **1,642 genes downregulated** in tumor (immune response, defense)
-- Fold changes ranging from **0.04x to 28x**
+- 25 matched tumor/normal pairs, 50 samples, from a pool of 113 available
+  matched pairs in TCGA-BRCA.
+- 63,856 genes in the raw recount3 Gencode v26 annotation; 41,619 genes
+  passed filtering (total count ≥ 10 across all samples, and detected in
+  ≥ 20% of samples).
+- Library sizes after the coverage→reads conversion ranged from about 21.6
+  to 101.3 million reads per sample (see `results/tables/qc_library_sizes.csv`).
+- pydeseq2, fit with design `~patient_id + condition` (paired), found
+  **8,333 significant genes** at padj < 0.05 and |log2FC| ≥ 1 – 3,024 up in
+  tumor, 5,309 down in tumor.
+- The single largest fold-changes downward in tumor were genes like `LEP`,
+  `CIDEA`, `CIDEC`, and `CSN2` – these are adipocyte/mammary secretory genes,
+  which makes sense: normal breast tissue is largely fat and secretory
+  epithelium, and tumor tissue displaces both. Upward, genes like `MMP13`
+  and `COL10A1` (stromal remodeling/collagen) and cell-cycle genes dominate.
+- GO Biological Process enrichment (Enrichr `GO_Biological_Process_2023`)
+  on the up-regulated set is dominated by mitotic/cell-cycle terms –
+  mitotic spindle checkpoint signaling, sister chromatid segregation, that
+  kind of thing – which is exactly what you'd expect from a proliferating
+  tumor. The down-regulated set enriches for cell-cell adhesion and GPCR
+  signaling terms, consistent with loss of normal tissue architecture and
+  signaling. 34 GO BP terms were significant (padj<0.05) in the up set,
+  12 in the down set. Full term tables are in
+  `results/tables/enrichment_up_GO_BP.csv` / `enrichment_down_GO_BP.csv`.
 
-**Biological Interpretation:**
-- Tumor shows strong **proliferation signature** (cell cycle genes activated)
-- Evidence of **immune evasion** (immune pathways suppressed)
-- Consistent with known cancer hallmarks
+## Pipeline
 
----
+All four steps are plain Python scripts in `scripts/`, meant to be run in
+order:
 
-## Project Structure
+1. **`01_data_preparation.py`** – downloads the recount3 gene count matrix
+   and TCGA metadata tables (or reuses `data/` if already downloaded),
+   parses TCGA barcodes to find sample type (field 4: `01` = primary
+   tumor, `11` = solid tissue normal) and patient ID (first 12 characters
+   of the barcode), finds patients with both, randomly samples 25 pairs
+   with a fixed seed, converts coverage sums to approximate read counts,
+   and writes `raw_counts_matched_subset.csv` + `sample_sheet.csv`.
+2. **`02_quality_control.py`** – library size and gene-detection QC,
+   low-count gene filtering, PCA and sample-correlation plots on
+   log2(CPM+1).
+3. **`03_differential_expression.py`** – fits pydeseq2's negative binomial
+   GLM with a paired design (`~patient_id + condition`), runs the Wald test
+   for Tumor vs Normal, writes the full and significant DE tables, and
+   makes the volcano/MA/top-50-heatmap plots.
+4. **`04_pathway_enrichment.py`** – maps significant Ensembl gene IDs to
+   gene symbols via the MyGene.info REST API, then runs Enrichr GO
+   Biological Process enrichment (via `gseapy.enrichr`) separately on the
+   up- and down-regulated gene sets, and plots the top terms.
 
-```r
-RNA-seq-differential-expression-analysis/
-│
-├── README.md # Project documentation
-├── environment.R # Package installation script
-├── analysis_report.html # Interactive HTML report
-│
-├── app/
-│ └── app.R # Shiny dashboard application
-│
-├── data/
-│ ├── raw/ # Original count data
-│ │ ├── count_matrix.rds
-│ │ └── sample_metadata.rds
-│ └── processed/ # Filtered & normalized data
-│ ├── counts_filtered.rds
-│ └── vsd_matrix.rds
-│
-├── scripts/
-│ ├── 01_data_preparation.R # Data simulation & setup
-│ ├── 02_quality_control.R # QC analysis & visualization
-│ ├── 03_differential_expression.R # DESeq2 analysis
-│ └── 04_pathway_enrichment.R # GO enrichment analysis
-│
-└── results/
-├── figures/ # 16 publication-quality plots
-│ ├── 01_library_sizes.png
-│ ├── 02_gene_detection.png
-│ ├── 03_count_distribution.png
-│ ├── 04_sample_correlation.png
-│ ├── 05_pca_plot.png
-│ ├── 06_sample_distances.png
-│ ├── 07_volcano_plot.png
-│ ├── 08_MA_plot.png
-│ ├── 09_heatmap_top_genes.png
-│ ├── 10_fold_change_distribution.png
-│ ├── 11_pvalue_distribution.png
-│ ├── 12_GO_upregulated_barplot.png
-│ ├── 13_GO_upregulated_dotplot.png
-│ ├── 14_GO_downregulated_barplot.png
-│ ├── 15_GO_downregulated_dotplot.png
-│ └── 16_GO_combined_comparison.png
-│
-└── tables/ # 9 result tables (CSV)
-├── qc_summary.csv
-├── DE_results_full.csv
-├── DE_results_significant.csv
-├── DE_results_top100.csv
-├── DE_genes_upregulated.csv
-├── DE_genes_downregulated.csv
-├── GO_enrichment_upregulated.csv
-└── GO_enrichment_downregulated.csv
-```
----
+### Reproducing this
 
-## Technologies & Methods
-
-### **Core Technologies**
-- **R 4.3+** - Statistical computing
-- **Bioconductor 3.17+** - Bioinformatics packages
-- **DESeq2** - Differential expression analysis
-- **clusterProfiler** - Pathway enrichment
-
-### **R Packages**
-```r
-# Differential Expression
-library(DESeq2)           # DE analysis (Love et al., 2014)
-library(edgeR)            # Alternative DE method
-
-# Visualization  
-library(EnhancedVolcano)  # Volcano plots
-library(pheatmap)         # Heatmaps
-library(ggplot2)          # Publication-quality graphics
-
-# Pathway Analysis
-library(clusterProfiler)  # GO/KEGG enrichment
-library(org.Hs.eg.db)     # Human gene annotations
-
-# Data Manipulation
-library(tidyverse)        # Data wrangling
-
+```bash
+pip install -r requirements.txt
+python scripts/01_data_preparation.py
+python scripts/02_quality_control.py
+python scripts/03_differential_expression.py
+python scripts/04_pathway_enrichment.py
 ```
 
-## Statistical Methods
-- Normalization: DESeq2 median-of-ratios
-- Variance stabilization: VST transformation
-- Batch correction: Linear model accounting for batch effects
-- Multiple testing: Benjamini-Hochberg FDR correction
-- Significance thresholds: Adjusted p-value < 0.05, |log2FC| ≥ 1
+Each script reads from and writes to `results/tables/` and
+`results/figures/`, so they have to run in order the first time. After
+`01_data_preparation.py` has downloaded the recount3 files once into
+`data/`, re-running from scratch takes a few minutes total (the DESeq2 fit
+on 50 samples × ~42k genes is the slow part, roughly two minutes; the
+Enrichr calls also add some wall-clock time since they hit a live API).
 
-## Analysis Workflow
-
-```r
-1. Data Preparation
-
-source("scripts/01_data_preparation.R")
-
-- Simulated realistic RNA-seq count data
-- 20,000 genes × 12 samples (6 tumor, 6 normal)
-- Included batch effects and biological variability
-
-2. Quality Control
-
-source("scripts/02_quality_control.R")
-
-Metrics Evaluated:
-
-- Library size distribution (2.3M reads average)
-- Gene detection rate (91.4% of transcriptome)
-- Sample correlation (within > between groups)
-- PCA analysis (PC1 = 24.2% variance)
-- Batch effect assessment (PC2 = 7.9%)
-
-3.  Differential Expression
-
-source("scripts/03_differential_expression.R")
-
-DESeq2 Analysis:
-
-- Design: ~ batch + condition
-- Identified 3,296 significant DE genes
-- Top upregulated: 21.8-fold increase
-- Top downregulated: 27-fold decrease
-
-4. Pathway Enrichment
-
-source("scripts/04_pathway_enrichment.R")
-
-GO Enrichment Results:
-
-- Upregulated: Cell cycle, DNA replication, mitosis
-- Downregulated: Immune response, defense mechanisms
-- 16 significantly enriched pathways (p < 0.05)
+## Output files
 
 ```
+results/tables/
+  raw_counts_matched_subset.csv   # genes x samples, converted read counts
+  sample_sheet.csv                # sample metadata: patient, condition, barcode
+  qc_library_sizes.csv            # per-sample library size + detection rate
+  filtered_counts.csv             # counts after low-count gene filtering
+  pca_coordinates.csv             # PC1/PC2 per sample
+  DE_full_results.csv             # all tested genes, DESeq2 stats
+  DE_significant.csv              # padj<0.05 & |log2FC|>=1
+  DE_top20_upregulated.csv
+  DE_top20_downregulated.csv
+  up_gene_symbols.csv / down_gene_symbols.csv
+  enrichment_up_GO_BP.csv / enrichment_down_GO_BP.csv
 
-## Results
-
-Differential Expression Summary
-
-- Total genes analyzed - 19,779
-- Significant DE genes - 3,296 (16.7%)
-- Upregulated in tumor - 1,654
-- Downregulated in tumor - 1,642
-- Max fold change (up) - 28.1x
-- Max fold change (down) - 0.04x (27x decrease)
-- Min adjusted p-value - 1.36e-14
-
-Top Enriched Pathways
-
-Upregulated (Tumor > Normal):
-- Cell cycle (95 genes, p = 2.4e-12)
-- Cell division (78 genes, p = 6.8e-11)
-- Mitotic cell cycle (72 genes, p = 1.1e-09)
-
-Downregulated (Tumor < Normal):
-- Immune response (89 genes, p = 1.8e-10)
-- Immune system process (82 genes, p = 2.4e-10)
-- Innate immune response (71 genes, p = 6.8e-09)
-
-## Visualizations
-
-### Quality Control
-
-**PCA Analysis**
-
-![PCA Plot](results/figures/05_pca_plot.png)
-
-*PCA showing clear separation between tumor (red) and normal (blue) samples. PC1 captures 24.2% of variance.*
-
-**Sample Correlation**
-
-![Correlation Heatmap](results/figures/04_sample_correlation.png)
-
-*Sample-to-sample correlation heatmap showing samples cluster by condition.*
-
----
-
-### Differential Expression
-
-**Volcano Plot**
-
-![Volcano Plot](results/figures/07_volcano_plot.png)
-
-*Volcano plot highlighting 3,296 differentially expressed genes. Red = upregulated, Green = downregulated.*
-
-**Heatmap of Top DE Genes**
-
-![Heatmap](results/figures/09_heatmap_top_genes.png)
-
-*Heatmap of top 50 DE genes showing clear separation between tumor and normal samples.*
-
----
-
-### Pathway Enrichment
-
-![GO Enrichment](results/figures/16_GO_combined_comparison.png)
-
-*GO enrichment analysis showing upregulated proliferation pathways (red) and downregulated immune pathways (blue).*
-
-## How to Reproduce:
-
-```r
-- Prerequisites
-
-# R version 4.3 or higher
-# Bioconductor 3.17 or higher
-
-# Install required packages
-source("environment.R")
-
-- Run Complete Pipeline
-
-# Step 1: Data preparation
-source("scripts/01_data_preparation.R")
-
-# Step 2: Quality control
-source("scripts/02_quality_control.R")
-
-# Step 3: Differential expression
-source("scripts/03_differential_expression.R")
-
-# Step 4: Pathway enrichment
-source("scripts/04_pathway_enrichment.R")
-
+results/figures/
+  01_library_sizes.png
+  02_pca_tumor_vs_normal.png
+  03_sample_correlation_heatmap.png
+  04_volcano_plot.png
+  05_ma_plot.png
+  06_top50_heatmap.png
+  07_go_enrichment_up.png
+  08_go_enrichment_down.png
 ```
 
-## Output Files:
+## Design notes / limitations
 
-Figures (16 total)
-- QC plots: Library sizes, gene detection, PCA, correlation
-- DE plots: Volcano, MA, heatmaps, distributions
-- Pathway plots: GO enrichment bar plots, dot plots, comparisons
+- **Subsampling.** TCGA-BRCA has 113 matched tumor/normal pairs; I used 25
+  (50 samples) to keep the DESeq2 fit and the Enrichr round-trips fast
+  enough to iterate on. The random seed (42) is fixed in
+  `01_data_preparation.py` so re-running reproduces the same 25 patients.
+  Using all 113 pairs would give more power, particularly for genes with
+  modest effect sizes, and would be a reasonable next step if compute time
+  weren't a constraint.
+- **This is bulk RNA-seq, not single-cell.** Everything reported here is an
+  average signal across the entire tissue biopsy – tumor cells, stroma,
+  infiltrating immune cells, blood vessels, whatever else was in the
+  sample. A gene showing up as "down in tumor" could reflect a real
+  drop in expression, or just a change in the tissue's cell-type
+  composition (e.g. less adipose tissue in the tumor biopsy than the
+  normal biopsy). The strong adipocyte/secretory signature in the
+  down-regulated genes is a good illustration of this – it's likely partly
+  a composition effect, not purely a per-cell expression change.
+- **recount3's counts are coverage sums, not read counts**, as noted above.
+  The read-length-based conversion is the standard approach recount3's own
+  R package uses, but it's still an approximation – it doesn't correct for
+  gene length or GC content the way TPM/RPKM would, and pydeseq2's own
+  size-factor normalization inside `DeseqDataSet` handles library-size
+  differences on top of that. I didn't additionally apply gene-length
+  normalization since DESeq2's model is built around raw counts and its own
+  normalization, not length-normalized values.
+- **Paired design vs. pure tumor effect.** The `~patient_id + condition`
+  design controls for each patient's baseline expression, which is more
+  conservative and more defensible than pooling unrelated tumor and normal
+  samples, but it does mean the model has a lot of coefficients (25 patient
+  terms) for a fairly small sample size. This is standard practice for
+  paired designs in DESeq2 but worth knowing if someone asks about the
+  model's degrees of freedom.
+- **GO enrichment gene ID mapping.** Roughly 18% of Ensembl IDs (1,498 of
+  8,333) in the significant gene list didn't resolve to a symbol through
+  MyGene.info – mostly non-coding RNAs, readthrough transcripts, and other
+  IDs without a clean HGNC symbol – so the enrichment analysis ran on the
+  ~6,800 that did resolve. This slightly undercounts the true enrichment
+  signal but shouldn't bias which pathways come out on top.
+- **Enrichr gene set version.** I used `GO_Biological_Process_2023`
+  (Enrichr's most recent GO BP library as of this run). Term names and
+  exact p-values would shift slightly with a different GO release.
 
-Tables (9 total)
-- DE_results_full.csv - All genes with statistics
-- DE_results_significant.csv - 3,296 significant genes
-- DE_genes_upregulated.csv - 1,654 upregulated genes
-- DE_genes_downregulated.csv - 1,642 downregulated genes
-- GO_enrichment_upregulated.csv - Enriched pathways (up)
-- GO_enrichment_downregulated.csv - Enriched pathways (down)
+## References
 
-Additional QC and summary tables
-
-## Skills Demonstrated:
-
-Bioinformatics
-- RNA-seq data analysis
-- Differential expression analysis (DESeq2)
-- Quality control & normalization
-- Batch effect correction
-- Pathway enrichment analysis
-- Functional annotation
-
-Statistical Analysis
-- Negative binomial modeling
-- Multiple testing correction (FDR)
-- Variance stabilization
-- Dimensionality reduction (PCA)
-- Hierarchical clustering
-
-Data Science
-- R programming
-- Data wrangling (tidyverse)
-- Data visualization (ggplot2)
-- Reproducible research
-- Version control (Git/GitHub)
-
-Domain Knowledge
-- Cancer biology
-- Molecular biology
-- Genomics
-- Gene regulation
-- Biological pathway analysis
-
-## References:
-
-Methods & Packages
-- Love, M.I., Huber, W., Anders, S. (2014). Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15:550.
-- Yu, G., Wang, L.G., Han, Y., He, Q.Y. (2012). clusterProfiler: an R package for comparing biological themes among gene clusters. OMICS, 16(5):284-287.
-- Wickham, H. (2016). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York.
-
-Biological Context
-- Hanahan, D., Weinberg, R.A. (2011). Hallmarks of cancer: the next generation. Cell, 144(5):646-674.
-
-## Author:
-Ishan Maheshwari
-- MSc in Genomics Data Science | University of Galway
-- LinkedIn: www.linkedin.com/in/ishanmaheshwari2001
-- Email: ishanmaheshwari02@gmail.com
-
-## License:
-This project is licensed under the MIT License.
-
-## Acknowledgements:
-- Bioconductor community for excellent bioinformatics tools
-- DESeq2 developers for robust statistical methods
-- R community for comprehensive data science ecosystem
+- Muzellec, B., Teleńczuk, M., Cabeli, V., & Andreux, M. (2023). PyDESeq2: a
+  python package for bulk RNA-seq differential expression analysis.
+  *Bioinformatics*, 39(11), btad547.
+  https://doi.org/10.1093/bioinformatics/btad547 – pydeseq2 GitHub:
+  https://github.com/owkin/PyDESeq2
+- Fang, Z., Liu, X., & Peltz, G. (2023). GSEApy: a comprehensive package for
+  performing gene set enrichment analysis in Python. *Bioinformatics*, 39(1),
+  btac757. https://doi.org/10.1093/bioinformatics/btac757 – gseapy docs:
+  https://gseapy.readthedocs.io/
+- Wilks, C., Zheng, S.C., Chen, F.Y., et al. (2021). recount3: summaries and
+  queries for large-scale RNA-seq expression and splicing. *Genome Biology*,
+  22, 323. https://doi.org/10.1186/s13059-021-02533-6 – recount3 docs:
+  https://rna.recount.bio/
+- recount3 data access (AWS Open Data mirror used in this project):
+  https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/
+- The Cancer Genome Atlas Program (TCGA), National Cancer Institute /
+  Genomic Data Commons: https://www.cancer.gov/ccg/research/genome-sequencing/tcga
+  and https://gdc.cancer.gov/ – TCGA barcode structure reference:
+  https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/
+- Chen, Y., et al. MyGene.info gene annotation query service, used here for
+  Ensembl-to-symbol mapping: https://mygene.info/
+- Enrichr: Kuleshov, M.V., et al. (2016). Enrichr: a comprehensive gene set
+  enrichment analysis web server 2016 update. *Nucleic Acids Research*,
+  44(W1), W90-97. https://doi.org/10.1093/nar/gkw377 –
+  https://maayanlab.cloud/Enrichr/
