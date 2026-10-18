@@ -132,11 +132,11 @@ def main():
           f"{(res_down['Adjusted P-value'] < 0.05).sum() if not res_down.empty else 0} significant at padj<0.05")
 
     plot_top_terms(
-        res_up, "Top GO Biological Process terms – genes UP in tumor",
+        res_up, "Top GO Biological Process terms: genes UP in tumor",
         FIGURES / "07_go_enrichment_up.png", color="#d62728",
     )
     plot_top_terms(
-        res_down, "Top GO Biological Process terms – genes DOWN in tumor",
+        res_down, "Top GO Biological Process terms: genes DOWN in tumor",
         FIGURES / "08_go_enrichment_down.png", color="#1f77b4",
     )
 
