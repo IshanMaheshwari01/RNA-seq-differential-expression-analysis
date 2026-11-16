@@ -1,21 +1,11 @@
 """
 04_pathway_enrichment.py
 
-Takes the significant up/down gene sets from 03_differential_expression.py
-and runs GO Biological Process enrichment using gseapy against the Enrichr
-GO_Biological_Process_2023 library (fetched live from the Enrichr web API,
-https://maayanlab.cloud/Enrichr/).
-
-Gene IDs in the count matrix are Ensembl gene IDs (recount3 / Gencode v26
-annotation), but Enrichr gene sets are indexed by gene symbol, so IDs are
-mapped to symbols first via the MyGene.info REST API
-(https://mygene.info/) before submission.
-
-Outputs:
-  results/tables/enrichment_up_GO_BP.csv
-  results/tables/enrichment_down_GO_BP.csv
-  results/figures/07_go_enrichment_up.png
-  results/figures/08_go_enrichment_down.png
+GO Biological Process enrichment (gseapy / Enrichr,
+GO_Biological_Process_2023) on the significant up and down gene sets from
+03_differential_expression.py. The count matrix uses Ensembl IDs, so IDs are
+mapped to symbols via the MyGene.info REST API first, since that's what
+Enrichr's gene sets are indexed by.
 """
 
 import time

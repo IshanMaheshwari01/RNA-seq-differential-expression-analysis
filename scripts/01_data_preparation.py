@@ -1,61 +1,35 @@
 """
 01_data_preparation.py
 
-Downloads (or reuses a local cache of) the real TCGA-BRCA gene-level RNA-seq
-count matrix from the recount3 project, identifies patient-matched
-tumor/normal sample pairs from the TCGA barcode embedded in the recount3
-TCGA metadata table, subsamples to a fixed set of pairs for compute
-tractability, and writes a clean count matrix + sample sheet to disk for the
-downstream QC / DE / enrichment scripts.
+Downloads the TCGA-BRCA gene-level RNA-seq counts from recount3, finds
+patient-matched tumor/normal pairs from the TCGA barcodes in the metadata
+table, samples 25 of those pairs with a fixed seed, and writes the count
+matrix + sample sheet that the QC / DE / enrichment scripts read.
 
-Data source
------------
-recount3 (human, TCGA data source, BRCA project), gene-level counts,
-Gencode v26 annotation ("G026"), STAR + featureCounts summarized by the
-Monorail pipeline used to build recount3. This is NOT simulated data -- it
-is the same processed TCGA RNA-seq count data distributed by the recount3
-project (https://rna.recount.bio), mirrored on the AWS Open Data registry.
+Data source: recount3 (TCGA data source, BRCA project), Gencode v26
+annotation, STAR + featureCounts summarized by recount3's Monorail pipeline.
+Files (both publicly hosted, no login):
 
-Files pulled (all real, publicly hosted, no login required):
-  - Gene counts:
-    https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/gene_sums/CA/BRCA/tcga.gene_sums.BRCA.G026.gz
-  - TCGA sample metadata (barcode, sample type, clinical fields):
-    https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/metadata/CA/BRCA/tcga.tcga.BRCA.MD.gz
+  counts:    https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/gene_sums/CA/BRCA/tcga.gene_sums.BRCA.G026.gz
+  metadata:  https://recount-opendata.s3.amazonaws.com/recount3/release/human/data_sources/tcga/metadata/CA/BRCA/tcga.tcga.BRCA.MD.gz
 
-Why recount3 instead of the Xena GDC hub file named in the original task
-notes: the literal Xena S3 URL
-(gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BRCA.htseq_counts.tsv.gz)
-returned HTTP 403 (Access Denied) from this sandbox, and the
-gdc.xenahubs.net redirector 302-redirects to the same restricted bucket.
-recount3's AWS Open Data mirror was reachable and returned HTTP 200, so it
-was used instead, exactly as the task instructions anticipated ("use
-whichever source actually works").
+I first tried the UCSC Xena GDC hub copy of the same data, but the S3 bucket
+behind it returned 403 Access Denied, so I used the recount3 AWS Open Data
+mirror instead.
 
-Sample type codes (from the GDC barcode spec, 4th barcode field):
-  01 = Primary Tumor, 11 = Solid Tissue Normal.
-  https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/
+One thing to watch: recount3's gene_sums files are base-pair coverage sums,
+not read counts. If you feed them to DESeq2 as-is the library sizes come out
+in the billions (that's how I noticed the first time). The standard fix, same
+as the recount3 R package's compute_read_counts(), is:
 
-Units of the count matrix -- important
----------------------------------------
-recount3 "gene_sums" files are NOT raw read counts. They are base-pair
-coverage sums (the area under the per-base coverage curve, summed over each
-gene's exons), inherited from the recount2 processing model. This is
-documented in the recount3 Bioconductor package (`transform_counts()`,
-`compute_read_counts()`) -- see
-https://rna.recount.bio/docs/bioconductor.html and
-https://bioconductor.org/packages/release/bioc/manuals/recount3/man/recount3.pdf.
+    read_counts = round(gene_sums / average_mapped_read_length)
 
-Per the recount3 R source (`compute_read_counts()` in
-https://github.com/LieberInstitute/recount3/blob/devel/R/transform_counts.R),
-the standard conversion to approximate read counts is:
+using the per-sample average mapped read length from the recount_qc table.
+That conversion is applied below, so raw_counts_matched_subset.csv already
+holds approximate integer read counts.
 
-    read_counts = round( gene_sums / recount_qc.star.average_mapped_length )
-
-i.e. dividing the coverage sum by that sample's average mapped read length
-(pulled from the `recount_qc` metadata table). That conversion is applied
-below before the counts are handed to pydeseq2, so the "raw_counts_matched_subset.csv"
-produced by this script already contains DESeq2-ready approximate integer
-read counts, not the unconverted coverage sums.
+Sample type codes (4th TCGA barcode field): 01 = primary tumor,
+11 = solid tissue normal.
 """
 
 import gzip
@@ -67,7 +41,7 @@ import numpy as np
 import pandas as pd
 
 RANDOM_SEED = 42
-N_PAIRS = 25  # subsample size (task suggests 20-30 matched pairs)
+N_PAIRS = 25  # 25 pairs is enough for a paired DESeq2 fit without the fit taking ages
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"

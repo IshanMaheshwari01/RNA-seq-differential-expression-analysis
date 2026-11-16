@@ -1,28 +1,14 @@
 """
 03_differential_expression.py
 
-Runs the differential expression analysis with pydeseq2 (a Python
-reimplementation of DESeq2's negative-binomial GLM + Wald test, Muzellec
-et al. 2023, Bioinformatics) on the filtered TCGA-BRCA matched tumor/normal
-count matrix produced by 02_quality_control.py.
-
-Design: paired by patient. Each patient contributed one tumor and one
-normal sample (see 01_data_preparation.py), so the model is
+Differential expression with pydeseq2 on the filtered matched counts. The
+design is paired, since every patient has one tumor and one normal sample:
 
     ~ patient_id + condition
 
-which removes patient-to-patient variation before testing for the tumor vs.
-normal effect, similar to a paired t-test / blocked ANOVA design. This is
-the design pydeseq2's documentation recommends for matched/paired samples.
-
-Outputs:
-  results/tables/DE_full_results.csv        (all genes, DESeq2 stats)
-  results/tables/DE_significant.csv         (padj < 0.05 & |log2FC| >= 1)
-  results/tables/DE_top20_upregulated.csv
-  results/tables/DE_top20_downregulated.csv
-  results/figures/04_volcano_plot.png
-  results/figures/05_ma_plot.png
-  results/figures/06_top50_heatmap.png
+so patient-to-patient variation is removed before testing the tumor vs
+normal effect. Writes the full and significant DE tables plus the volcano,
+MA and top-50 heatmap figures.
 """
 
 from pathlib import Path

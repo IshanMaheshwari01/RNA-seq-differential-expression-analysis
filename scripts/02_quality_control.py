@@ -1,20 +1,13 @@
 """
 02_quality_control.py
 
-Basic QC on the matched TCGA-BRCA tumor/normal count subset produced by
-01_data_preparation.py:
-  - library size (total counts) per sample, split by condition
-  - gene detection rate per sample (fraction of genes with count > 0)
-  - low-count gene filtering (kept for DE step)
-  - sample-sample correlation (on log-CPM) as a heatmap
-  - PCA on log-CPM of filtered genes, colored by condition
+QC on the matched tumor/normal counts from 01_data_preparation.py: library
+sizes and detection rates per sample, low-count gene filtering, then a
+correlation heatmap and PCA on log-CPM to see whether tumor and normal
+samples separate.
 
-Outputs:
-  results/tables/qc_library_sizes.csv
-  results/tables/filtered_counts.csv          (genes that pass the filter)
-  results/figures/01_library_sizes.png
-  results/figures/02_pca_tumor_vs_normal.png
-  results/figures/03_sample_correlation_heatmap.png
+Outputs: qc_library_sizes.csv, filtered_counts.csv and the first three
+figures in results/figures/.
 """
 
 from pathlib import Path
