@@ -2,7 +2,7 @@
 
 Differential expression and pathway enrichment on public TCGA-BRCA RNA-seq
 data, comparing tumor and normal breast tissue taken from the same patients.
-All the numbers below come from running the scripts in `scripts/`, and the key plots are collected in an interactive [dashboard](https://ishanmaheshwari01.github.io/RNA-seq-differential-expression-analysis/docs/).
+All the numbers below come from running the scripts in `scripts/`, and there is an interactive R Shiny app for the volcano plot, top tables and enrichment (`app.R`, run with `Rscript -e 'shiny::runApp()'`).
 
 **Data**: TCGA-BRCA bulk RNA-seq gene counts from the [recount3](https://rna.recount.bio)
 AWS Open Data mirror. 25 patients who each had both a primary tumor and a
